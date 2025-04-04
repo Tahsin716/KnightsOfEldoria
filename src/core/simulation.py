@@ -43,3 +43,9 @@ class Simulation:
             if treasure.x == x and treasure.y == y:
                 return treasure
         return None
+
+    def is_simulation_over(self):
+        no_treasure = not self.treasures
+        all_hunters_gone = not self.hunters
+        no_recruit_possible = all(len(hideout.hunters) >= 5 for hideout in self.hideouts)
+        return no_treasure or (all_hunters_gone and no_recruit_possible)

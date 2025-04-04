@@ -3,44 +3,66 @@ import tkinter as tk
 from src.configs.grid_config import GridConfig
 from src.core.simulation import Simulation
 
-
 class Application:
     def __init__(self, root):
         self.root = root
-        self.running = False
+        self.simulation_running = False
 
-        self.canvas = tk.Canvas(
-            root,
-            width=GridConfig.GRID_SIZE * GridConfig.CELL_SIZE,
-            height=GridConfig.GRID_SIZE * GridConfig.CELL_SIZE,
-            bg="white"
-        )
+        canvas_size = GridConfig.GRID_SIZE * GridConfig.CELL_SIZE
+        self.canvas = tk.Canvas(root, width=canvas_size, height=canvas_size, bg="white")
         self.canvas.grid(row=0, column=0, rowspan=6)
 
         self.simulation = Simulation(GridConfig.GRID_SIZE)
         self.simulation.populate()
 
-        self.status_label = tk.Label(root, text="")
-        self.status_label.grid(row=0, column=1, sticky="w")
+        self.start_button = tk.Button(root, text="Start", command=self.start_simulation)
+        self.start_button.grid(row=0, column=1, padx=10, pady=5, sticky="ew")
 
-        self.start_button = tk.Button(root, text="Start Simulation", command=self.start_simulation)
-        self.start_button.grid(row=1, column=1, sticky="ew")
+        self.stop_button = tk.Button(root, text="Stop", command=self.stop_simulation)
+        self.stop_button.grid(row=1, column=1, padx=10, pady=5, sticky="ew")
 
-        self.stop_button = tk.Button(root, text="Stop Simulation", command=self.stop_simulation)
-        self.stop_button.grid(row=2, column=1, sticky="ew")
+        self.legend_frame = tk.Frame(root)
+        self.legend_frame.grid(row=2, column=1, sticky="n")
+        tk.Label(self.legend_frame, text="Legend", font=("Arial", 10, "bold")).pack(anchor="w")
+        self.add_legend_item("Treasure", "yellow")
+        self.add_legend_item("Hideout", "blue")
+        self.add_legend_item("Hunter", "green")
+        self.add_legend_item("Knight", "red")
 
-        self.legend_label = tk.Label(root, text=self.get_legend_text(), justify="left")
-        self.legend_label.grid(row=3, column=1, sticky="nw")
+        self.status_label = tk.Label(root, text="", justify="left", anchor="w")
+        self.status_label.grid(row=3, column=1, sticky="nw", padx=10)
+
+        self.update_world()
+
+    def add_legend_item(self, text, color):
+        frame = tk.Frame(self.legend_frame)
+        frame.pack(anchor="w")
+        color_box = tk.Label(frame, bg=color, width=2, height=1)
+        color_box.pack(side="left", padx=(0, 5))
+        label = tk.Label(frame, text=text)
+        label.pack(side="left")
 
     def draw_cell(self, x, y, color):
-        x1 = x * GridConfig.CELL_SIZE
-        y1 = y * GridConfig.CELL_SIZE
-        x2 = (x + 1) * GridConfig.CELL_SIZE
-        y2 = (y + 1) * GridConfig.CELL_SIZE
-        self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="gray")
+        size = GridConfig.CELL_SIZE
+        self.canvas.create_rectangle(x * size, y * size, (x+1) * size, (y+1) * size, fill=color, outline="gray")
+
+    def draw_grid_lines(self):
+        for i in range(GridConfig.GRID_SIZE + 1):
+            x = i * GridConfig.CELL_SIZE
+            self.canvas.create_line(x, 0, x, GridConfig.GRID_SIZE * GridConfig.CELL_SIZE, fill="lightgray")
+            self.canvas.create_line(0, x, GridConfig.GRID_SIZE * GridConfig.CELL_SIZE, x, fill="lightgray")
+
+    def start_simulation(self):
+        self.simulation_running = True
+        self.update_world()
+
+    def stop_simulation(self):
+        self.simulation_running = False
 
     def update_world(self):
         self.canvas.delete("all")
+        self.draw_grid_lines()
+
         for treasure in self.simulation.treasures:
             self.draw_cell(treasure.x, treasure.y, "yellow")
         for hideout in self.simulation.hideouts:
@@ -50,35 +72,14 @@ class Application:
         for knight in self.simulation.knights:
             self.draw_cell(knight.x, knight.y, "red")
 
-        self.update_status()
-        self.simulation.step()
+        self.display_status()
 
-        if self.running and self.simulation.treasures and self.simulation.hunters:
+        if self.simulation_running and not self.simulation.is_simulation_over():
+            self.simulation.step()
             self.root.after(500, self.update_world)
 
-    def start_simulation(self):
-        if not self.running:
-            self.running = True
-            self.update_world()
-
-    def stop_simulation(self):
-        self.running = False
-
-    def update_status(self):
-        num_hunters = len(self.simulation.hunters)
-        num_knights = len(self.simulation.knights)
-        num_treasures = len(self.simulation.treasures)
-        total_wealth = sum([t.value for t in self.simulation.treasures])
-        self.status_label.config(
-            text=f"Hunters: {num_hunters} | Knights: {num_knights} | Treasures: {num_treasures} | Wealth Left: {total_wealth:.2f}"
-        )
-
-    def get_legend_text(self):
-        return (
-            "Legend:\n"
-            "Green: Hunter\n"
-            "Red: Knight\n"
-            "Yellow: Treasure\n"
-            "Blue: Hideout\n"
-            "Gray Grid: Boundaries"
-        )
+    def display_status(self):
+        total_wealth = sum(t.value for t in self.simulation.treasures)
+        alive_hunters = sum(1 for h in self.simulation.hunters if h.stamina > 0)
+        total_knights = len(self.simulation.knights)
+        self.status_label.config(text=f"Hunters Alive: {alive_hunters}\nKnights: {total_knights}\nTreasures Left: {len(self.simulation.treasures)}\nTreasure Value: {total_wealth:.2f}")
