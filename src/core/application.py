@@ -24,10 +24,13 @@ class Application:
         self.legend_frame = tk.Frame(root)
         self.legend_frame.grid(row=2, column=1, sticky="n")
         tk.Label(self.legend_frame, text="Legend", font=("Arial", 10, "bold")).pack(anchor="w")
-        self.add_legend_item("Treasure", "yellow")
+        self.add_legend_item("Treasure (Gold)", "gold")
+        self.add_legend_item("Treasure (Silver)", "silver")
+        self.add_legend_item("Treasure (Bronze)", "orange")
         self.add_legend_item("Hideout", "blue")
         self.add_legend_item("Hunter", "green")
         self.add_legend_item("Knight", "red")
+        self.add_legend_item("Garrison", "black")
 
         self.status_label = tk.Label(root, text="", justify="left", anchor="w")
         self.status_label.grid(row=3, column=1, sticky="nw", padx=10)
@@ -63,14 +66,19 @@ class Application:
         self.canvas.delete("all")
         self.draw_grid_lines()
 
+        color_map = {"GOLD": "gold", "SILVER": "silver", "BRONZE": "orange"}
         for treasure in self.simulation.treasures:
-            self.draw_cell(treasure.x, treasure.y, "yellow")
+            color = color_map.get(treasure.t_type.name, "yellow")
+            self.draw_cell(treasure.x, treasure.y, color)
+
         for hideout in self.simulation.hideouts:
             self.draw_cell(hideout.x, hideout.y, "blue")
         for hunter in self.simulation.hunters:
             self.draw_cell(hunter.x, hunter.y, "green")
         for knight in self.simulation.knights:
             self.draw_cell(knight.x, knight.y, "red")
+        for gx, gy in self.simulation.garrison_locations:
+            self.draw_cell(gx, gy, "black")
 
         self.display_status()
 

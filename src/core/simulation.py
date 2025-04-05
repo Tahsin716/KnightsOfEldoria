@@ -14,6 +14,7 @@ class Simulation:
         self.hunters = []
         self.hideouts = []
         self.knights = []
+        self.garrison_locations = GridConfig.GARRISON_LOCATIONS
         self.simulation_step = 0
 
     def populate(self):
