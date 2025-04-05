@@ -65,7 +65,7 @@ class Knight(BaseEntity):
 
         if is_at_garrison:
             if self.energy < self.max_energy:
-                self.energy = self.max_energy
+                self.energy += self.max_energy * 0.1
                 if self.energy > self.max_energy:
                     self.energy = self.max_energy
                 return
