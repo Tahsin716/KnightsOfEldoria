@@ -4,7 +4,7 @@ class GridConfig:
 
     GARRISON_LOCATIONS = [
         (0, 0),
-        (GRID_SIZE - 1, 0),
-        (0, GRID_SIZE - 1),
+        (GRID_SIZE // 2 - 1, GRID_SIZE // 2 - 1),
+        (GRID_SIZE // 2 - 4, GRID_SIZE // 2 - 4),
         (GRID_SIZE - 1, GRID_SIZE - 1),
     ]

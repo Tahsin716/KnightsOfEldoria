@@ -65,10 +65,10 @@ class Knight(BaseEntity):
 
         if is_at_garrison:
             if self.energy < self.max_energy:
-                self.energy += self.max_energy * self.RECOVERY_RATE_PERCENT
+                self.energy = self.max_energy
                 if self.energy > self.max_energy:
                     self.energy = self.max_energy
-            return
+                return
 
         low_energy_threshold = self.max_energy * self.LOW_ENERGY_THRESHOLD_PERCENT
         needs_to_retreat = self.energy <= low_energy_threshold

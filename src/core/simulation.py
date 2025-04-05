@@ -22,7 +22,7 @@ class Simulation:
             self.treasures.append(Treasure(random.randint(0, GridConfig.GRID_SIZE - 1),
                                           random.randint(0, GridConfig.GRID_SIZE-1),
                                           random.choice(list(TreasureType))))
-        for _ in range(2):
+        for _ in range(3):
             self.knights.append(Knight(random.randint(0, GridConfig.GRID_SIZE-1),
                                       random.randint(0, GridConfig.GRID_SIZE-1)))
 
