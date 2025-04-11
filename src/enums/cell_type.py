@@ -7,3 +7,4 @@ class CellType(Enum):
     HUNTER = 2
     HIDEOUT = 3
     KNIGHT = 4
+    GARRISON = 5

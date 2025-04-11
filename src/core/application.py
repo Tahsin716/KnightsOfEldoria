@@ -77,8 +77,8 @@ class Application:
             self.draw_cell(hunter.x, hunter.y, "green")
         for knight in self.simulation.knights:
             self.draw_cell(knight.x, knight.y, "red")
-        for gx, gy in self.simulation.garrison_locations:
-            self.draw_cell(gx, gy, "black")
+        for garrison in self.simulation.garrisons:
+            self.draw_cell(garrison.x, garrison.y, "black")
 
         self.display_status()
 

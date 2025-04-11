@@ -17,55 +17,41 @@ class Knight(BaseEntity):
         self.energy = self.max_energy
 
     def _calculate_distance(self, target_x, target_y):
-        dx = abs(self.x - target_x)
-        dy = abs(self.y - target_y)
-
+        dx = abs(self.x - target_x); dy = abs(self.y - target_y)
         grid_size = GridConfig.GRID_SIZE
-
-        wrapped_dx = min(dx, grid_size - dx)
-        wrapped_dy = min(dy, grid_size - dy)
-
+        wrapped_dx = min(dx, grid_size - dx); wrapped_dy = min(dy, grid_size - dy)
         return wrapped_dx + wrapped_dy
 
     def _move_towards(self, target_x, target_y):
         if self.x == target_x and self.y == target_y: return False
-
-        dx = target_x - self.x
-        dy = target_y - self.y
-
+        dx = target_x - self.x; dy = target_y - self.y
         grid_size = GridConfig.GRID_SIZE
-
-        if abs(dx) > grid_size / 2:
-            dx = -1 * (grid_size - abs(dx)) * (dx / abs(dx))
-
-        if abs(dy) > grid_size / 2:
-            dy = -1 * (grid_size - abs(dy)) * (dy / abs(dy))
-
+        if abs(dx) > grid_size / 2: dx = -1 * (grid_size - abs(dx)) * (dx / abs(dx))
+        if abs(dy) > grid_size / 2: dy = -1 * (grid_size - abs(dy)) * (dy / abs(dy))
         move_x = 1 if dx > 0 else -1 if dx < 0 else 0
         move_y = 1 if dy > 0 else -1 if dy < 0 else 0
-
         moved = False
-
         if move_x != 0 or move_y != 0:
             self.move(move_x, move_y); moved = True
-
         return moved
 
     def _find_nearest_garrison(self, world):
-        if not world.garrison_locations: return None
-        return min(world.garrison_locations, key=lambda g_loc: self._calculate_distance(g_loc[0], g_loc[1]))
+
+        if not world.garrisons: return None
+
+        return min(world.garrisons, key=lambda garrison: self._calculate_distance(garrison.x, garrison.y))
 
 
     def act(self, world):
         is_at_garrison = False
-        for gx, gy in world.garrison_locations:
-            if self.x == gx and self.y == gy:
+        for garrison in world.garrisons:
+            if self.x == garrison.x and self.y == garrison.y:
                 is_at_garrison = True
                 break
 
         if is_at_garrison:
             if self.energy < self.max_energy:
-                self.energy += self.max_energy * 0.1
+                self.energy += self.max_energy * self.RECOVERY_RATE_PERCENT
                 if self.energy > self.max_energy:
                     self.energy = self.max_energy
                 return
@@ -77,9 +63,10 @@ class Knight(BaseEntity):
         energy_cost = 0
 
         if needs_to_retreat:
-            target_garrison_loc = self._find_nearest_garrison(world)
-            if target_garrison_loc:
-                moved = self._move_towards(target_garrison_loc[0], target_garrison_loc[1])
+            target_garrison = self._find_nearest_garrison(world)
+            if target_garrison:
+                # Move towards the garrison object's coordinates
+                moved = self._move_towards(target_garrison.x, target_garrison.y)
                 if moved:
                     energy_cost = self.PATROL_MOVE_COST
 
@@ -120,8 +107,7 @@ class Knight(BaseEntity):
             if caught_hunter:
                  stamina_drain = caught_hunter.MAX_STAMINA * self.INTERACTION_STAMINA_DRAIN_PERCENT
                  caught_hunter.stamina -= stamina_drain
-                 if caught_hunter.stamina < 0:
-                     caught_hunter.stamina = 0
+                 if caught_hunter.stamina < 0: caught_hunter.stamina = 0
 
                  if caught_hunter.carrying:
                      dropped_treasure = caught_hunter.carrying
