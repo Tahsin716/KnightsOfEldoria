@@ -19,7 +19,7 @@ class Simulation:
         self.simulation_step = 0
 
     def populate(self):
-        for _ in range(10):
+        for _ in range(15):
             self.treasures.append(Treasure(random.randint(0, GridConfig.GRID_SIZE - 1),
                                           random.randint(0, GridConfig.GRID_SIZE-1),
                                           random.choice(list(TreasureType))))

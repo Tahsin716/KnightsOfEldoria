@@ -4,9 +4,9 @@ from src.entities.base_entity import BaseEntity
 
 class Hunter(BaseEntity):
     MAX_STAMINA = 100
-    STAMINA_MOVE_COST = 2
+    STAMINA_MOVE_COST = 0.2
     STAMINA_CRITICAL_LEVEL = 6
-    SCAN_RADIUS = 1
+    SCAN_RADIUS = 2
 
     def __init__(self, x, y):
         super().__init__(x, y)
@@ -121,7 +121,8 @@ class Hunter(BaseEntity):
 
         dx, dy = random.choice([-1, 0, 1]), random.choice([-1, 0, 1])
         if dx != 0 or dy != 0:
-             self.stamina -= self.STAMINA_MOVE_COST
+             stamina_cost = self.stamina * self.STAMINA_MOVE_COST
+             self.stamina -= stamina_cost
              if self.stamina < 0: self.stamina = 0
              self.move(dx, dy)
 
