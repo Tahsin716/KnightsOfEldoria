@@ -80,8 +80,9 @@ class Simulation:
 
     def is_simulation_over(self):
         no_treasure = not self.treasures
+        hunters_carrying_treasure = any(h.carrying for h in self.hunters)
         recruitment_possible = False
         if self.hunters:
              recruitment_possible = any(len(h.associated_hunters) < Hideout.MAX_HUNTERS for h in self.hideouts)
-        simulation_over = no_treasure or (not self.hunters and not recruitment_possible)
+        simulation_over = (no_treasure and not hunters_carrying_treasure) or (not self.hunters and not recruitment_possible)
         return simulation_over
