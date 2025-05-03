@@ -2,6 +2,9 @@ from src.entities.base_entity import BaseEntity
 from src.configs.grid_config import GridConfig
 import random
 
+from src.entities.hunter import Hunter
+
+
 class Knight(BaseEntity):
     SCAN_RADIUS = 3
     MAX_ENERGY = 100
@@ -9,7 +12,7 @@ class Knight(BaseEntity):
     PATROL_MOVE_COST = 1
     PURSUE_MOVE_COST = 5
     RECOVERY_RATE_PERCENT = 0.10
-    INTERACTION_STAMINA_DRAIN_PERCENT = 0.05
+    INTERACTION_STAMINA_DRAIN_PERCENT = 0.20
 
     def __init__(self, x, y):
         super().__init__(x, y)
@@ -51,7 +54,7 @@ class Knight(BaseEntity):
 
         if is_at_garrison:
             if self.energy < self.max_energy:
-                self.energy += self.max_energy * self.RECOVERY_RATE_PERCENT
+                self.energy += self.energy * self.RECOVERY_RATE_PERCENT
                 if self.energy > self.max_energy:
                     self.energy = self.max_energy
                 return
@@ -98,14 +101,14 @@ class Knight(BaseEntity):
                 self.energy = 0
 
         if self.energy > 0:
-            caught_hunter = None
+            caught_hunter : Hunter = None
             for hunter in world.hunters:
                  if not hunter.is_dead and self.x == hunter.x and self.y == hunter.y:
                      caught_hunter = hunter
                      break
 
             if caught_hunter:
-                 stamina_drain = caught_hunter.MAX_STAMINA * self.INTERACTION_STAMINA_DRAIN_PERCENT
+                 stamina_drain = caught_hunter.stamina * self.INTERACTION_STAMINA_DRAIN_PERCENT
                  caught_hunter.stamina -= stamina_drain
                  if caught_hunter.stamina < 0: caught_hunter.stamina = 0
 

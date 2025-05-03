@@ -4,7 +4,8 @@ from src.entities.base_entity import BaseEntity
 
 class Hunter(BaseEntity):
     MAX_STAMINA = 100
-    STAMINA_MOVE_COST = 0.2
+    STAMINA_MOVE_COST = 0.02
+    RECOVERY_RATE_PERCENT = 0.01
     STAMINA_CRITICAL_LEVEL = 6
     SCAN_RADIUS = 2
 
@@ -48,7 +49,9 @@ class Hunter(BaseEntity):
 
         if move_x != 0 or move_y != 0:
             self.move(move_x, move_y)
-            self.stamina -= self.STAMINA_MOVE_COST
+
+            stamina_cost = self.stamina * self.STAMINA_MOVE_COST
+            self.stamina -= stamina_cost
 
             if self.stamina < 0:
                 self.stamina = 0
@@ -86,7 +89,6 @@ class Hunter(BaseEntity):
                 self.carrying = None
             return
 
-        is_returning = False
 
         if self.carrying or self.stamina <= self.STAMINA_CRITICAL_LEVEL:
             is_returning = True
@@ -97,7 +99,10 @@ class Hunter(BaseEntity):
                     if self.carrying:
                         nearest_hideout.stored_treasure.append(self.carrying)
                         self.carrying = None
-                    self.stamina = self.MAX_STAMINA
+                    if self.stamina <= self.STAMINA_CRITICAL_LEVEL:
+                        self.stamina += self.stamina * self.RECOVERY_RATE_PERCENT
+                        if self.stamina > self.MAX_STAMINA:
+                            self.stamina = self.MAX_STAMINA
                 else:
                     self._move_towards(nearest_hideout.x, nearest_hideout.y)
             else:
