@@ -9,7 +9,7 @@ class Application:
     def __init__(self, root):
         self.root = root
         self.simulation_running = False
-        self.simulation_speed_ms = 200
+        self.simulation_speed_ms = 500
 
         canvas_size = GridConfig.GRID_SIZE * GridConfig.CELL_SIZE
         self.canvas = tk.Canvas(root, width=canvas_size, height=canvas_size, bg="white")

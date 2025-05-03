@@ -31,14 +31,13 @@ class Simulation:
             garrison = Garrison(gx, gy)
             self.garrisons.append(garrison)
 
-        num_knights = 2
+        num_knights = 3
         for _ in range(num_knights):
             kx = random.randint(0, GridConfig.GRID_SIZE - 1)
             ky = random.randint(0, GridConfig.GRID_SIZE - 1)
             knight = Knight(kx, ky)
             self.knights.append(knight)
 
-        # Populate Hideouts and initial Hunters
         for _ in range(3):
             hx = random.randint(0, GridConfig.GRID_SIZE - 1)
             hy = random.randint(0, GridConfig.GRID_SIZE - 1)
@@ -57,21 +56,21 @@ class Simulation:
         self.treasures[:] = [t for t in self.treasures if t.decay()]
 
         for hunter in self.hunters:
-             if not hunter.is_dead:
-                 hunter.act(self) # Pass simulation state
-
-        for knight in self.knights:
-            knight.act(self) # Pass simulation state
-
-        for hideout in self.hideouts:
-            hideout.recruit(self) # Pass simulation state
+             hunter.act(self)
 
         original_hunter_count = len(self.hunters)
-        self.hunters[:] = [h for h in self.hunters if not h.is_dead]
+        self.hunters[:] = [h for h in self.hunters if not h.is_dead and h.stamina > 0]
 
         if len(self.hunters) != original_hunter_count:
              for hideout in self.hideouts:
                  hideout.update_associated_hunters(self.hunters)
+
+        for knight in self.knights:
+            knight.act(self)
+
+        for hideout in self.hideouts:
+            hideout.recruit(self)
+
 
     def get_treasure_at(self, x, y):
         for treasure in self.treasures:

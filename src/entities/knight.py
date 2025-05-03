@@ -8,9 +8,9 @@ from src.entities.hunter import Hunter
 class Knight(BaseEntity):
     SCAN_RADIUS = 3
     MAX_ENERGY = 100
-    LOW_ENERGY_THRESHOLD_PERCENT = 0.20
+    LOW_ENERGY_THRESHOLD_PERCENT = 20
     PATROL_MOVE_COST = 1
-    PURSUE_MOVE_COST = 5
+    PURSUE_MOVE_COST = 0.20
     RECOVERY_RATE_PERCENT = 0.10
     INTERACTION_STAMINA_DRAIN_PERCENT = 0.20
 
@@ -18,6 +18,8 @@ class Knight(BaseEntity):
         super().__init__(x, y)
         self.max_energy = self.MAX_ENERGY
         self.energy = self.max_energy
+        self.is_detaining = False
+        self.detained_hunter : Hunter = None
 
     def _calculate_distance(self, target_x, target_y):
         dx = abs(self.x - target_x); dy = abs(self.y - target_y)
@@ -59,25 +61,25 @@ class Knight(BaseEntity):
                     self.energy = self.max_energy
                 return
 
-        low_energy_threshold = self.max_energy * self.LOW_ENERGY_THRESHOLD_PERCENT
-        needs_to_retreat = self.energy <= low_energy_threshold
+        needs_to_retreat = self.energy <= self.LOW_ENERGY_THRESHOLD_PERCENT
 
         moved = False
         energy_cost = 0
 
         if needs_to_retreat:
+
             target_garrison = self._find_nearest_garrison(world)
             if target_garrison:
                 # Move towards the garrison object's coordinates
                 moved = self._move_towards(target_garrison.x, target_garrison.y)
-                if moved:
-                    energy_cost = self.PATROL_MOVE_COST
+
 
         if not needs_to_retreat:
             target_hunter = None
             nearby_hunters = []
+
             for hunter in world.hunters:
-                 if hunter.is_dead: continue
+                 if hunter.is_dead or (hunter.is_caught and self.detained_hunter != hunter): continue
                  distance = self._calculate_distance(hunter.x, hunter.y)
                  if distance <= self.SCAN_RADIUS:
                      nearby_hunters.append((distance, hunter))
@@ -87,30 +89,41 @@ class Knight(BaseEntity):
                 target_hunter = nearby_hunters[0][1]
                 moved = self._move_towards(target_hunter.x, target_hunter.y)
                 if moved:
-                    energy_cost = self.PURSUE_MOVE_COST
+                    energy_cost = self.energy * self.PURSUE_MOVE_COST
             else:
                 dx, dy = random.choice([-1, 0, 1]), random.choice([-1, 0, 1])
                 if dx != 0 or dy != 0:
                     self.move(dx, dy)
                     moved = True
-                    energy_cost = self.PATROL_MOVE_COST
 
         if moved and self.energy > 0:
             self.energy -= energy_cost
             if self.energy < 0:
                 self.energy = 0
 
-        if self.energy > 0:
+        if self.energy > self.LOW_ENERGY_THRESHOLD_PERCENT:
             caught_hunter : Hunter = None
-            for hunter in world.hunters:
-                 if not hunter.is_dead and self.x == hunter.x and self.y == hunter.y:
-                     caught_hunter = hunter
-                     break
+
+            if self.is_detaining and not self.detained_hunter.is_dead:
+                caught_hunter = self.detained_hunter
+            else:
+                for hunter in world.hunters:
+                     if not hunter.is_dead and self.x == hunter.x and self.y == hunter.y:
+                         caught_hunter = hunter
+                         self.detained_hunter = hunter
+                         self.is_detaining = True
+                         break
 
             if caught_hunter:
-                 stamina_drain = caught_hunter.stamina * self.INTERACTION_STAMINA_DRAIN_PERCENT
+                 caught_hunter.is_caught = True
+                 stamina_drain = caught_hunter.MAX_STAMINA * self.INTERACTION_STAMINA_DRAIN_PERCENT
                  caught_hunter.stamina -= stamina_drain
-                 if caught_hunter.stamina < 0: caught_hunter.stamina = 0
+                 if caught_hunter.stamina <= 0:
+                     caught_hunter.stamina = 0
+                     caught_hunter.is_dead = True
+                     caught_hunter.is_caught = False
+                     self.is_detaining = False
+                     self.detained_hunter = None
 
                  if caught_hunter.carrying:
                      dropped_treasure = caught_hunter.carrying

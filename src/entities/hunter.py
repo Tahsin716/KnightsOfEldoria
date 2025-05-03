@@ -7,13 +7,14 @@ class Hunter(BaseEntity):
     STAMINA_MOVE_COST = 0.02
     RECOVERY_RATE_PERCENT = 0.01
     STAMINA_CRITICAL_LEVEL = 6
-    SCAN_RADIUS = 2
+    SCAN_RADIUS = 1
 
     def __init__(self, x, y):
         super().__init__(x, y)
         self.stamina = self.MAX_STAMINA
         self.carrying = None
         self.is_dead = False
+        self.is_caught = False
 
     def _calculate_distance(self, target_x, target_y):
         dx = abs(self.x - target_x)
@@ -61,7 +62,6 @@ class Hunter(BaseEntity):
         return moved
 
     def _scan_for_treasure(self, world):
-        best_treasure = None
         found_treasures = []
 
         for treasure in world.treasures:
@@ -81,6 +81,9 @@ class Hunter(BaseEntity):
         return None
 
     def act(self, world):
+        if self.is_dead:
+            return
+
         if self.stamina <= 0:
             self.is_dead = True
             if self.carrying:
@@ -89,6 +92,8 @@ class Hunter(BaseEntity):
                 self.carrying = None
             return
 
+        if self.is_caught:
+            return
 
         if self.carrying or self.stamina <= self.STAMINA_CRITICAL_LEVEL:
             is_returning = True
